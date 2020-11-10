@@ -1,0 +1,53 @@
+version: '3.4'
+services:
+    sponsorshipdb:
+        image: postgres:latest
+        networks:
+         - network-sponsorship
+        container_name: sponsorshipdb
+        volumes:
+          - postgres-data:/var/lib/postgresql/data
+        expose:
+          - 5534
+        ports:
+          - "5534:5432"
+        environment:
+             - POSTGRES_PASSWORD=sponsorship
+             - POSTGRES_USER=user_sponsorship
+             - POSTGRES_DB=sponsorshipHubDB
+        restart: unless-stopped
+    springboot:
+        image: springbootappsponsorship
+        container_name: springbootapp
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://sponsorshipdb:5432/sponsorshipHubDB
+        build:
+            context: .
+            dockerfile: ./Dockerfile.spring
+        expose:
+            - 8081
+        ports:
+          - "8084:8080"
+        depends_on:
+          - sponsorshipdb
+        links:
+          - sponsorshipdb
+        networks:
+          - network-sponsorship
+        restart: unless-stopped
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "sponsorshipdb@comfort.gor"
+            PGADMIN_DEFAULT_PASSWORD: "sponsorship"
+        ports:
+            - "1655:80"
+        depends_on:
+            - sponsorshipdb
+        networks:
+            - network-sponsorship
+networks: 
+    network-sponsorship:
+        driver: bridge
+volumes:
+    postgres-data:
